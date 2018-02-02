@@ -343,12 +343,7 @@ defmodule Gherkin.AST.Builder do
   @spec get_location(Token.t(), non_neg_integer) :: Location.t()
   defp get_location(token, column \\ 0)
   defp get_location(token, 0), do: Token.location(token)
-
-  defp get_location(token, column) do
-    token
-    |> Token.location()
-    |> Location.put_column(column)
-  end
+  defp get_location(token, column), do: %{Token.location(token) | column: column}
 
   @spec reject_nils(map) :: map
   defp reject_nils(map) do
