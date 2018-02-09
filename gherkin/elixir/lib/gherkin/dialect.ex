@@ -39,7 +39,7 @@ defmodule Gherkin.Dialect do
       mapping
       |> Stream.map(fn {field, key} -> {field, Map.fetch!(spec, key)} end)
       |> Enum.into(%{})
-      |> Map.put(:__struct, :__MODULE__)
+      |> Map.put(:__struct__, __MODULE__)
 
     def get(unquote(name)), do: unquote(Macro.escape(dialect))
   end
