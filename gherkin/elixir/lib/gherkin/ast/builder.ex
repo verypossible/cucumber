@@ -8,7 +8,7 @@ defmodule Gherkin.AST.Builder do
   @typep table_row :: %{cells: [cell], location: Location.t(), type: :TableRow}
 
   @spec build(Token.t()) :: AST.Node.t() | [comment]
-  def build(token) do
+  def build(%Token{} = token) do
     if Token.matched_type(token) === :Comment do
       Agent.get_and_update(__MODULE__, fn state ->
         comment = %{
@@ -29,7 +29,7 @@ defmodule Gherkin.AST.Builder do
   end
 
   @spec end_rule(rule_type) :: :ok
-  def end_rule(rule_type),
+  def end_rule(rule_type) when is_atom(rule_type),
     do:
       Agent.update(__MODULE__, fn state ->
         [old_node | stack] = state.stack
@@ -350,14 +350,14 @@ defmodule Gherkin.AST.Builder do
     for {k, v} <- map, v !== nil, into: %{}, do: {k, v}
   end
 
-  @spec get_result() :: AST.Node.t()
+  @spec get_result :: AST.Node.t()
   def get_result,
     do:
       Agent.get(__MODULE__, fn %{stack: [current_node | _]} ->
         AST.Node.get_child(current_node, :GherkinDocument)
       end)
 
-  @spec reset() :: :ok
+  @spec reset :: :ok
   def reset,
     do:
       Agent.update(__MODULE__, fn state ->
@@ -365,7 +365,7 @@ defmodule Gherkin.AST.Builder do
         initialize()
       end)
 
-  @spec start_link() :: :ok | {:error, :already_started | term}
+  @spec start_link :: :ok | {:error, :already_started | term}
   def start_link do
     case Agent.start_link(&initialize/0, name: __MODULE__) do
       {:ok, _} -> :ok
@@ -374,14 +374,14 @@ defmodule Gherkin.AST.Builder do
     end
   end
 
-  @spec initialize() :: %{comments: [comment], stack: [AST.Node.t()]}
+  @spec initialize :: %{comments: [comment], stack: [AST.Node.t()]}
   defp initialize do
     {:ok, ast_node} = AST.Node.start_link(:None)
     %{comments: [], stack: [ast_node]}
   end
 
   @spec start_rule(rule_type) :: :ok
-  def start_rule(rule_type),
+  def start_rule(rule_type) when is_atom(rule_type),
     do:
       Agent.update(__MODULE__, fn state ->
         {:ok, ast_node} = AST.Node.start_link(rule_type)

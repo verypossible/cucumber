@@ -44,5 +44,5 @@ defmodule Gherkin.Dialect do
     def get(unquote(name)), do: unquote(Macro.escape(dialect))
   end
 
-  def get(_name), do: nil
+  def get(name) when is_binary(name), do: nil
 end
