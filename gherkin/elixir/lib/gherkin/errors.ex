@@ -14,7 +14,8 @@ defmodule Gherkin.AST.BuilderError do
   defexception [:location, :message]
 
   @impl Exception
-  def message(exception), do: ErrorMessage.new(exception.location, exception.message)
+  def message(%__MODULE__{} = exception),
+    do: ErrorMessage.new(exception.location, exception.message)
 end
 
 defmodule Gherkin.CompositeParserError do
@@ -23,7 +24,7 @@ defmodule Gherkin.CompositeParserError do
   defexception [:errors, :location]
 
   @impl Exception
-  def message(exception) do
+  def message(%__MODULE__{} = exception) do
     messages = Enum.map_join(exception.errors, "\n", &Exception.message/1)
     ErrorMessage.new(exception.location, "Parser errors:\n#{messages}")
   end
@@ -35,7 +36,7 @@ defmodule Gherkin.NoSuchLanguageError do
   defexception [:language, :location]
 
   @impl Exception
-  def message(exception),
+  def message(%__MODULE__{} = exception),
     do: ErrorMessage.new(exception.location, "Language not supported: #{exception.language}")
 end
 
@@ -45,10 +46,14 @@ defmodule Gherkin.UnexpectedEOFError do
   defexception [:expected_token_types, :received_token]
 
   @impl Exception
-  def message(%{expected_token_types: expected_token_types, received_token: received_token}) do
-    expected = Enum.join(expected_token_types, ", ")
+  def message(%__MODULE__{} = exception) do
+    expected =
+      exception
+      |> Map.fetch!(:expected_token_types)
+      |> Enum.join(", ")
 
-    received_token
+    exception
+    |> Map.fetch!(:received_token)
     |> Token.location()
     |> ErrorMessage.new("unexpected end of file, expected: #{expected}")
   end
@@ -60,11 +65,20 @@ defmodule Gherkin.UnexpectedTokenError do
   defexception [:expected_token_types, :received_token]
 
   @impl Exception
-  def message(%{expected_token_types: expected_token_types, received_token: received_token}) do
-    expected = Enum.join(expected_token_types, ", ")
-    got = received_token |> Token.token_value() |> String.trim()
+  def message(%__MODULE__{} = exception) do
+    expected =
+      exception
+      |> Map.fetch!(:expected_token_types)
+      |> Enum.join(", ")
 
-    received_token
+    got =
+      exception
+      |> Map.fetch!(:received_token)
+      |> Token.token_value()
+      |> String.trim()
+
+    exception
+    |> Map.fetch!(:received_token)
     |> location()
     |> ErrorMessage.new("expected: #{expected}, got '#{got}'")
   end

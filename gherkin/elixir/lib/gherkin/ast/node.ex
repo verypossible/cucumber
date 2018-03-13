@@ -3,7 +3,7 @@ defmodule Gherkin.AST.Node do
   @type t :: pid
 
   @spec add_child(t, rule_type, term) :: :ok
-  def add_child(ast_node, rule_type, child),
+  def add_child(ast_node, rule_type, child) when is_pid(ast_node) and is_atom(rule_type),
     do:
       Agent.update(ast_node, fn state ->
         Map.update!(state, :children, fn children ->
@@ -12,23 +12,23 @@ defmodule Gherkin.AST.Node do
       end)
 
   @spec get_children(t, rule_type) :: list
-  def get_children(ast_node, rule_type),
+  def get_children(ast_node, rule_type) when is_pid(ast_node) and is_atom(rule_type),
     do: Agent.get(ast_node, &Map.get(&1.children, rule_type, []))
 
   @spec get_single(t, rule_type) :: term | nil
-  def get_single(ast_node, rule_type),
+  def get_single(ast_node, rule_type) when is_pid(ast_node) and is_atom(rule_type),
     do:
       Agent.get(ast_node, fn %{children: children} ->
         if list = children[rule_type], do: hd(list)
       end)
 
   @spec rule_type(t) :: rule_type
-  def rule_type(ast_node), do: Agent.get(ast_node, & &1.rule_type)
+  def rule_type(ast_node) when is_pid(ast_node), do: Agent.get(ast_node, & &1.rule_type)
 
   @spec start_link(rule_type) :: {:ok, pid} | {:error, term}
-  def start_link(rule_type),
+  def start_link(rule_type) when is_atom(rule_type),
     do: Agent.start_link(fn -> %{children: %{}, rule_type: rule_type} end)
 
   @spec stop(t) :: :ok
-  def stop(ast_node), do: Agent.stop(ast_node)
+  def stop(ast_node) when is_pid(ast_node), do: Agent.stop(ast_node)
 end
